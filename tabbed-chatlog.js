@@ -70,15 +70,15 @@ function isMessageTypeVisible(messageType) {
 
 
 function isMessageVisible(e) {
-    const messageType = e.data.type;
+    const messageType = e.type;
 
     if (!isMessageTypeVisible(messageType)) return false;
 
-    if (e.data.speaker.scene && game.settings.get("tabbed-chatlog", "perScene")) {
-        if ((messageType == CONST.CHAT_MESSAGE_TYPES.IC || messageType == CONST.CHAT_MESSAGE_TYPES.EMOTE) && (e.data.speaker.scene != game.user.viewedScene)) return false;
+    if (e.speaker.scene && game.settings.get("tabbed-chatlog", "perScene")) {
+        if ((messageType == CONST.CHAT_MESSAGE_TYPES.IC || messageType == CONST.CHAT_MESSAGE_TYPES.EMOTE) && (e.speaker.scene != game.user.viewedScene)) return false;
     }
 
-    if (e.data.blind && e.data.whisper.find(element => element == game.userId) == undefined) return false;
+    if (e.blind && e.whisper.find(element => element == game.userId) == undefined) return false;
 
     return true;
 }
@@ -165,17 +165,17 @@ Hooks.on("renderChatMessage", (chatMessage, html, data) => {
         }
     }
 
-    if (salonEnabled && chatMessage.data.type == CONST.CHAT_MESSAGE_TYPES.ROLL) {
+    if (salonEnabled && chatMessage.type == CONST.CHAT_MESSAGE_TYPES.ROLL) {
         if (!html.hasClass('gm-roll-hidden')) {
             html.css("display", "list-item");
         }
         return;
     }
 
-    if (salonEnabled && chatMessage.data.type == CONST.CHAT_MESSAGE_TYPES.WHISPER) return;
+    if (salonEnabled && chatMessage.type == CONST.CHAT_MESSAGE_TYPES.WHISPER) return;
 
     if (currentTab == "rolls") {
-        if (chatMessage.data.type == CONST.CHAT_MESSAGE_TYPES.OTHER && sceneMatches) {
+        if (chatMessage.type == CONST.CHAT_MESSAGE_TYPES.OTHER && sceneMatches) {
             html.css("display", "list-item");
         } else if (data.message.type == CONST.CHAT_MESSAGE_TYPES.ROLL && sceneMatches) {
             if (!html.hasClass('gm-roll-hidden')) {
@@ -212,13 +212,13 @@ Hooks.on("diceSoNiceRollComplete", (id) => {
 Hooks.on("createChatMessage", (chatMessage, content) => {
     var sceneMatches = true;
 
-    if (chatMessage.data.speaker.scene) {
-        if (chatMessage.data.speaker.scene != game.user?.viewedScene) {
+    if (chatMessage.speaker.scene) {
+        if (chatMessage.speaker.scene != game.user?.viewedScene) {
             sceneMatches = false;
         }
     }
 
-    if (chatMessage.data.type == CONST.CHAT_MESSAGE_TYPES.OTHER) {
+    if (chatMessage.type == CONST.CHAT_MESSAGE_TYPES.OTHER) {
         if (currentTab != "rolls" && sceneMatches) {
             if (game.settings.get("tabbed-chatlog", "autoNavigate")) {
                 window.game.tabbedchat.tabs.activate("rolls", {triggerCallback: true});
@@ -228,8 +228,8 @@ Hooks.on("createChatMessage", (chatMessage, content) => {
                 $("#rollsNotification").show();
             }
         }
-    } else if (chatMessage.data.type == CONST.CHAT_MESSAGE_TYPES.ROLL) {
-        if (currentTab != "rolls" && sceneMatches && chatMessage.data.whisper.length == 0) {
+    } else if (chatMessage.type == CONST.CHAT_MESSAGE_TYPES.ROLL) {
+        if (currentTab != "rolls" && sceneMatches && chatMessage.whisper.length == 0) {
             if (game.settings.get("tabbed-chatlog", "autoNavigate")) {
                 window.game.tabbedchat.tabs.activate("rolls", {triggerCallback: true});
             }
@@ -238,9 +238,9 @@ Hooks.on("createChatMessage", (chatMessage, content) => {
                 $("#rollsNotification").show();
             }
         }
-    } else if (chatMessage.data.type == CONST.CHAT_MESSAGE_TYPES.IC
-            || chatMessage.data.type == CONST.CHAT_MESSAGE_TYPES.EMOTE
-            || (chatMessage.data.type == CONST.CHAT_MESSAGE_TYPES.WHISPER && game.settings.get("tabbed-chatlog", "icWhispers"))) {
+    } else if (chatMessage.type == CONST.CHAT_MESSAGE_TYPES.IC
+            || chatMessage.type == CONST.CHAT_MESSAGE_TYPES.EMOTE
+            || (chatMessage.type == CONST.CHAT_MESSAGE_TYPES.WHISPER && game.settings.get("tabbed-chatlog", "icWhispers"))) {
         if (currentTab != "ic" && sceneMatches) {
             if (game.settings.get("tabbed-chatlog", "autoNavigate")) {
                 window.game.tabbedchat.tabs.activate("ic", {triggerCallback: true});
@@ -251,7 +251,7 @@ Hooks.on("createChatMessage", (chatMessage, content) => {
             }
         }
     } else {
-        if (salonEnabled && chatMessage.data.type == CONST.CHAT_MESSAGE_TYPES.WHISPER && !game.settings.get("tabbed-chatlog", "icWhispers")) return;
+        if (salonEnabled && chatMessage.type == CONST.CHAT_MESSAGE_TYPES.WHISPER && !game.settings.get("tabbed-chatlog", "icWhispers")) return;
 
         if (currentTab != "ooc") {
             if (game.settings.get("tabbed-chatlog", "autoNavigate")) {
@@ -269,23 +269,23 @@ Hooks.on("preCreateChatMessage", (chatMessage, content) => {
 
     if (game.settings.get('tabbed-chatlog', 'icChatInOoc')) {
         if (currentTab == "ooc") {
-            if (chatMessage.data.type == CONST.CHAT_MESSAGE_TYPES.IC) {
-                chatMessage.data._source.type = CONST.CHAT_MESSAGE_TYPES.OOC;
-                chatMessage.data.type = CONST.CHAT_MESSAGE_TYPES.OOC;
+            if (chatMessage.type == CONST.CHAT_MESSAGE_TYPES.IC) {
+                chatMessage._source.type = CONST.CHAT_MESSAGE_TYPES.OOC;
+                chatMessage.type = CONST.CHAT_MESSAGE_TYPES.OOC;
                 content.type = CONST.CHAT_MESSAGE_TYPES.OOC
                 delete (content.speaker);
-                delete (chatMessage.data.speaker);
-                delete (chatMessage.data._source.speaker);
+                delete (chatMessage.speaker);
+                delete (chatMessage._source.speaker);
                 console.log(chatMessage);
             }
         }
     }
 
-    if (chatMessage.data.type == CONST.CHAT_MESSAGE_TYPES.OTHER || chatMessage.data.type == CONST.CHAT_MESSAGE_TYPES.ROLL) {
+    if (chatMessage.type == CONST.CHAT_MESSAGE_TYPES.OTHER || chatMessage.type == CONST.CHAT_MESSAGE_TYPES.ROLL) {
 
-    } else if (chatMessage.data.type == CONST.CHAT_MESSAGE_TYPES.IC || chatMessage.data.type == CONST.CHAT_MESSAGE_TYPES.EMOTE) {
+    } else if (chatMessage.type == CONST.CHAT_MESSAGE_TYPES.IC || chatMessage.type == CONST.CHAT_MESSAGE_TYPES.EMOTE) {
         try {
-            let scene = game.scenes.get(chatMessage.data.speaker.scene);
+            let scene = game.scenes.get(chatMessage.speaker.scene);
             let webhook = scene.getFlag("tabbed-chatlog", "webhook");
 
             if (webhook == undefined || webhook == "") {
@@ -296,7 +296,7 @@ Hooks.on("preCreateChatMessage", (chatMessage, content) => {
                 return;
             }
 
-            let speaker = chatMessage.data.speaker
+            let speaker = chatMessage.speaker
             var actor = loadActorForChatMessage(speaker);
             let img = "";
             let name = "";
@@ -308,15 +308,15 @@ Hooks.on("preCreateChatMessage", (chatMessage, content) => {
                 name = speaker.alias;
             }
 
-            img = game.data.addresses.remote + "/" + img;
+            img = game.addresses.remote + "/" + img;
 
-            if (!chatMessage.data.whisper?.length) {
-                let message = chatMessage.data.content;
+            if (!chatMessage.whisper?.length) {
+                let message = chatMessage.content;
                 if (game.modules.get("polyglot")?.active) {
                     const LanguageProvider = polyglot.polyglot.LanguageProvider;
-                    let lang = chatMessage.data.flags.polyglot.language
+                    let lang = chatMessage.flags.polyglot.language
                     if (lang != LanguageProvider.defaultLanguage) {
-                        message = LanguageProvider.languages[lang] + ": ||" + chatMessage.data.content + "||";
+                        message = LanguageProvider.languages[lang] + ": ||" + chatMessage.content + "||";
                     }
                 }
                 sendToDiscord(webhook, {
@@ -337,15 +337,15 @@ Hooks.on("preCreateChatMessage", (chatMessage, content) => {
             }
 
             let img = game.users.get(chatMessage.user.id).avatar;
-            img = game.data.addresses.remote + "/" + img;
+            img = game.addresses.remote + "/" + img;
 
-            if (!chatMessage.data.whisper?.length) {
-                let message = chatMessage.data.content;
+            if (!chatMessage.whisper?.length) {
+                let message = chatMessage.content;
                 if (game.modules.get("polyglot")?.active) {
-                    let lang = chatMessage.data.flags.polyglot.language
+                    let lang = chatMessage.flags.polyglot.language
                     const LanguageProvider = polyglot.polyglot.LanguageProvider;
                     if (lang != LanguageProvider.defaultLanguage) {
-                        message = LanguageProvider.languages[lang] + ": ||" + chatMessage.data.content + "||";
+                        message = LanguageProvider.languages[lang] + ": ||" + chatMessage.content + "||";
                     }
                 }
                 sendToDiscord(webhook, {
@@ -392,7 +392,7 @@ function loadActorForChatMessage(speaker) {
 
 function generatePortraitImageElement(actor) {
     let img = "";
-    img = actor.token ? actor.token.data.img : actor.data.token.img;
+    img = actor.token ? actor.token.img : actor.token.img;
     return img;
 }
 
@@ -422,8 +422,8 @@ Hooks.on("renderSceneConfig", (app, html, data) => {
 
     if (app.object.compendium) return;
 
-    if (app.object.data.flags["tabbed-chatlog"]) {
-        if (app.object.data.flags["tabbed-chatlog"].webhook) {
+    if (app.object.flags["tabbed-chatlog"]) {
+        if (app.object.flags["tabbed-chatlog"].webhook) {
             loadedWebhookData = app.object.getFlag('tabbed-chatlog', 'webhook');
         } else {
             app.object.setFlag('tabbed-chatlog', 'webhook', "");
@@ -601,7 +601,7 @@ Hooks.on('init', () => {
         type: Boolean,
     });
 
-    salonEnabled = game.data.modules.find(x => x.id == "salon")?.active;
+    salonEnabled = game.modules.find(x => x.id == "salon")?.active;
 });
 
 
@@ -1042,7 +1042,7 @@ var TurndownService = (function () {
 
         while (node !== element) {
             if (node.nodeType === 3 || node.nodeType === 4) { // Node.TEXT_NODE or Node.CDATA_SECTION_NODE
-                var text = node.data.replace(/[ \r\n\t]+/g, ' ');
+                var text = node.replace(/[ \r\n\t]+/g, ' ');
 
                 if ((!prevText || / $/.test(prevText.data)) &&
                     !prevVoid && text[0] === ' ') {
@@ -1061,7 +1061,7 @@ var TurndownService = (function () {
             } else if (node.nodeType === 1) { // Node.ELEMENT_NODE
                 if (isBlock(node) || node.nodeName === 'BR') {
                     if (prevText) {
-                        prevText.data = prevText.data.replace(/ $/, '');
+                        prevText.data = prevText.replace(/ $/, '');
                     }
 
                     prevText = null;
@@ -1082,7 +1082,7 @@ var TurndownService = (function () {
         }
 
         if (prevText) {
-            prevText.data = prevText.data.replace(/ $/, '');
+            prevText.data = prevText.replace(/ $/, '');
             if (!prevText.data) {
                 remove(prevText);
             }
